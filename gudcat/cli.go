@@ -1,9 +1,39 @@
+/*
+Command gudcat either starts a server to listen for data (gudcat server), or
+starts sending data itself (gudcat client).
+
+	Usage
+	    gudcat client [options] address
+	    gudcat server address
+
+	See `gudcat <command> -h` for more info
+
+
+Server Usage:
+    gudcat server address
+
+Listen on <address> for data and print it to stdout
+
+Examples:
+    gudcat server :3388
+    gudcat server [::]:3388
+    gudcat server 127.0.0.1:3388
+
+
+Client Usage:
+    gudcat client [options] address
+
+Read data from stdin and send it to <address>.
+
+Examples:
+    gudcat client -delay 10ms -size 510 localhost:3388 < input.file
+    gudcat client '[fe80::1]:3388'
+*/
 package main
 
 import (
 	"flag"
 	"fmt"
-	"log"
 	"net"
 	"os"
 	"time"
@@ -48,11 +78,14 @@ func client(args []string) {
 		fmt.Fprintf(os.Stderr, "Error resolving listen address: %s\n", err)
 		fmt.Println()
 		clientUsage()
-		os.Exit(3)
+		os.Exit(1)
 	}
 
 	client := gudcat.NewClient(addr, *size, *delay)
-	client.Run()
+	if err := client.Run(); err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
+	}
 }
 
 // start the server
@@ -69,10 +102,11 @@ func server(args []string) {
 		serverUsage()
 		os.Exit(3)
 	}
+
 	server := gudcat.NewServer(addr)
-	err = server.Run()
-	if err != nil {
-		log.Fatalln(err)
+	if err := server.Run(); err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
 	}
 }
 

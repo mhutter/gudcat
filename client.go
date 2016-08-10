@@ -1,3 +1,4 @@
+// Package gudcat lets you send data via UDP in a more or less controlled manner
 package gudcat
 
 import (
