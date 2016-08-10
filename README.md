@@ -1,5 +1,7 @@
 # gudcat
 
+[![GoDoc](https://godoc.org/github.com/mhutter/gudcat?status.svg)](https://godoc.org/github.com/mhutter/gudcat)
+
 gudcat lets you send data via UDP in a more or less controlled manner.
 
 ## Synopsis
