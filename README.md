@@ -16,7 +16,9 @@ gudcat client -size 512 -delay 1ms < source.file
 
 ## Installation
 
-    go get -u github.com/mhutter/gudcat
+    go get -u github.com/mhutter/gudcat/gudcat
+
+(yep, thats `gudcat` twice)
 
 ## Usage
 
