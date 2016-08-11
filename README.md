@@ -14,6 +14,10 @@ gudcat server :3000 > target.file
 gudcat client -size 512 -delay 1ms < source.file
 ```
 
+## Installation
+
+    go get -u github.com/mhutter/gudcat
+
 ## Usage
 
     Usage:

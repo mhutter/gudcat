@@ -25,6 +25,12 @@ Client Usage:
 
 Read data from stdin and send it to <address>.
 
+Options:
+    -delay duration
+        delay between packages. Valid time units are 'ns', 'us' (or 'µs'), 'ms', 's', 'm', 'h'.
+    -size int
+        package size in bytes (default 64000)
+
 Examples:
     gudcat client -delay 10ms -size 510 localhost:3388 < input.file
     gudcat client '[fe80::1]:3388'
@@ -59,25 +65,25 @@ func main() {
 
 // start the client
 func client(args []string) {
-	fs := flag.NewFlagSet("flags", flag.ContinueOnError)
+	if len(args) < 1 {
+		args = []string{"-h"}
+	}
+	fs := flag.NewFlagSet("flags", flag.ExitOnError)
+	fs.Usage = clientUsage(fs)
 
 	// Flag definitions
-	delay := fs.Duration("delay", time.Duration(0), "delay between packages")
+	delay := fs.Duration("delay", time.Duration(0), "delay between packages. Valid time units are 'ns', 'us' (or 'µs'), 'ms', 's', 'm', 'h'.")
 	size := fs.Int64("size", 64000, "package size in bytes")
 
-	// parse flags, print usage info on failure
+	// parse flags, print usage info and exit on failure
 	err := fs.Parse(args)
-	if err != nil || fs.NArg() < 2 {
-		clientUsage()
-		os.Exit(1)
-	}
 
 	// resolve address, print usage info and quit on failure
 	addr, err := net.ResolveUDPAddr("udp", fs.Arg(1))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error resolving listen address: %s\n", err)
 		fmt.Println()
-		clientUsage()
+		fs.Usage()
 		os.Exit(1)
 	}
 
@@ -137,13 +143,18 @@ func serverUsage() {
 }
 
 // prints client usage information
-func clientUsage() {
-	fmt.Println("Usage:")
-	fmt.Println("    \u001b[1mgudcat client\u001b[22m [\u001b[4moptions\u001b[24m] \u001b[4maddress\u001b[24m")
-	fmt.Println("")
-	fmt.Println("Read data from stdin and send it to <address>.")
-	fmt.Println("")
-	fmt.Println("Examples:")
-	fmt.Println("    gudcat client -delay 10ms -size 510 localhost:3388 < input.file")
-	fmt.Println("    gudcat client '[fe80::1]:3388'")
+func clientUsage(fs *flag.FlagSet) func() {
+	return func() {
+		fmt.Println("Usage:")
+		fmt.Println("    \u001b[1mgudcat client\u001b[22m [\u001b[4moptions\u001b[24m] \u001b[4maddress\u001b[24m")
+		fmt.Println("")
+		fmt.Println("Read data from stdin and send it to <address>.")
+		fmt.Println("")
+		fmt.Println("Options:")
+		fs.PrintDefaults()
+		fmt.Println("")
+		fmt.Println("Examples:")
+		fmt.Println("    gudcat client -delay 10ms -size 510 localhost:3388 < input.file")
+		fmt.Println("    gudcat client '[fe80::1]:3388'")
+	}
 }
