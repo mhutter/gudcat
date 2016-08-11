@@ -79,7 +79,7 @@ func client(args []string) {
 	err := fs.Parse(args)
 
 	// resolve address, print usage info and quit on failure
-	addr, err := net.ResolveUDPAddr("udp", fs.Arg(1))
+	addr, err := net.ResolveUDPAddr("udp", fs.Arg(0))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error resolving listen address: %s\n", err)
 		fmt.Println()
