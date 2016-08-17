@@ -10,14 +10,22 @@ starts sending data itself (gudcat client).
 
 
 Server Usage:
-    gudcat server address
+    gudcat server [options] address
 
 Listen on <address> for data and print it to stdout
 
+Options:
+    -timeout duration
+        Valid time units are 'ns', 'us' (or 'µs'), 'ms', 's', 'm', 'h'.
+
+Timeout: The timeout will only start once the server has
+received some data. New data will reset the timeout.
+
 Examples:
-    gudcat server :3388
+    gudcat server -timeout 1s :3388
     gudcat server [::]:3388
     gudcat server 127.0.0.1:3388
+
 
 
 Client Usage:
@@ -72,7 +80,7 @@ func client(args []string) {
 	fs.Usage = clientUsage(fs)
 
 	// Flag definitions
-	delay := fs.Duration("delay", time.Duration(0), "delay between packages. Valid time units are 'ns', 'us' (or 'µs'), 'ms', 's', 'm', 'h'.")
+	delay := fs.Duration("delay", time.Duration(0), "Delay between packages. Valid time units are 'ns', 'us' (or 'µs'), 'ms', 's', 'm', 'h'.")
 	size := fs.Int64("size", 64000, "package size in bytes")
 
 	// parse flags, print usage info and exit on failure
@@ -96,50 +104,62 @@ func client(args []string) {
 
 // start the server
 func server(args []string) {
-	if len(args) != 1 || isHelp(args[0]) {
-		serverUsage()
-		os.Exit(1)
+	if len(args) < 1 {
+		args = []string{"-h"}
 	}
 
-	addr, err := net.ResolveUDPAddr("udp", args[0])
+	fs := flag.NewFlagSet("flags", flag.ExitOnError)
+	fs.Usage = serverUsage(fs)
+
+	// Flag definitions
+	timeout := fs.Duration("timeout", time.Duration(0), "Valid time units are 'ns', 'us' (or 'µs'), 'ms', 's', 'm', 'h'.")
+
+	// parse flags, print usage info and exit on failure.
+	err := fs.Parse(args)
+
+	addr, err := net.ResolveUDPAddr("udp", fs.Arg(0))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error resolving listen address: %s\n", err)
 		fmt.Println()
-		serverUsage()
-		os.Exit(3)
+		fs.Usage()
+		os.Exit(1)
 	}
 
-	server := gudcat.NewServer(addr)
+	server := gudcat.NewServer(addr, *timeout)
 	if err := server.Run(); err != nil {
 		fmt.Println("Error:", err)
 		os.Exit(1)
 	}
 }
 
-func isHelp(str string) bool {
-	return (str == "-h" || str == "-help" || str == "--help")
-}
-
 // prints usage information
 func usage() {
 	fmt.Println("Usage:")
 	fmt.Println("    \u001b[1mgudcat client\u001b[22m [\u001b[4moptions\u001b[24m] \u001b[4maddress\u001b[24m")
-	fmt.Println("    \u001b[1mgudcat server\u001b[22m \u001b[4maddress\u001b[24m")
+	fmt.Println("    \u001b[1mgudcat server\u001b[22m [\u001b[4moptions\u001b[24m] \u001b[4maddress\u001b[24m")
 	fmt.Println("")
 	fmt.Println("See `gudcat <command> -h` for more info")
 }
 
 // prints server usage information
-func serverUsage() {
-	fmt.Println("Usage:")
-	fmt.Println("    \u001b[1mgudcat server\u001b[22m \u001b[4maddress\u001b[24m")
-	fmt.Println("")
-	fmt.Println("Listen on <address> for data and print it to stdout")
-	fmt.Println("")
-	fmt.Println("Examples:")
-	fmt.Println("    gudcat server :3388")
-	fmt.Println("    gudcat server [::]:3388")
-	fmt.Println("    gudcat server 127.0.0.1:3388")
+func serverUsage(fs *flag.FlagSet) func() {
+	return func() {
+		fmt.Println("Usage:")
+		fmt.Println("    \u001b[1mgudcat server\u001b[22m [\u001b[4moptions\u001b[24m] \u001b[4maddress\u001b[24m")
+		fmt.Println("")
+		fmt.Println("Listen on <address> for data and print it to stdout")
+		fmt.Println("")
+		fmt.Println("Options:")
+		fs.PrintDefaults()
+		fmt.Println("")
+		fmt.Println("Timeout: The timeout will only start once the server has")
+		fmt.Println("received some data. New data will reset the timeout.")
+		fmt.Println("")
+		fmt.Println("Examples:")
+		fmt.Println("    gudcat server :3388")
+		fmt.Println("    gudcat server [::]:3388")
+		fmt.Println("    gudcat server 127.0.0.1:3388")
+	}
 }
 
 // prints client usage information
