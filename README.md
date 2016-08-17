@@ -35,9 +35,10 @@ gudcat client -size 512 -delay 1ms < source.file
 
     Usage of flags:
       -delay duration
-        	delay between packages
+          Delay between packages. Valid time units are 'ns', 'us' (or 'µs'),
+          'ms', 's', 'm', 'h'.
       -size int
-        	package size in bytes (default 64000)
+          package size in bytes (default 64000)
 
     Examples:
         gudcat client -delay 10ms -size 510 localhost:3388 < input.file
@@ -47,11 +48,18 @@ gudcat client -size 512 -delay 1ms < source.file
 ### Server
 
     Usage:
-        gudcat server address
+        gudcat server [options] address
 
     Listen on <address> for data and print it to stdout
 
+    Options:
+      -timeout duration
+          Valid time units are 'ns', 'us' (or 'µs'), 'ms', 's', 'm', 'h'.
+
+    Timeout: The timeout will only start once the server has
+    received some data. New data will reset the timeout.
+
     Examples:
-        gudcat server :3388
+        gudcat server -timeout 1s :3388
         gudcat server [::]:3388
         gudcat server 127.0.0.1:3388

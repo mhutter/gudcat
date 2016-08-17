@@ -156,7 +156,7 @@ func serverUsage(fs *flag.FlagSet) func() {
 		fmt.Println("received some data. New data will reset the timeout.")
 		fmt.Println("")
 		fmt.Println("Examples:")
-		fmt.Println("    gudcat server :3388")
+		fmt.Println("    gudcat server -timeout 1s :3388")
 		fmt.Println("    gudcat server [::]:3388")
 		fmt.Println("    gudcat server 127.0.0.1:3388")
 	}
